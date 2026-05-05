@@ -1,7 +1,2 @@
 ﻿# TetrisGame
 
-Khoa: Da them ham main va thu vien raylib cho visual studio
-Nhiem vu cua cac sv con lai:
--Khue: them phan code cho xoay block;
--Nhat: viet ham xoa line va tang toc moi khi xoa hang thanh cong
--Lam: lam lai vien cho tro choi
