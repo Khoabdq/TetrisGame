@@ -155,7 +155,7 @@ int main()
         }
         block2Board();
         draw();
-        _sleep(200);
+        _sleep(speed);
     }
     return 0;
 }
