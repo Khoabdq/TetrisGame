@@ -74,6 +74,7 @@ char blocks[][4][4] = {
 
 
 int x = 4, y = 0, b = 1;
+int speed = 200;
 void gotoxy(int x, int y) {
     COORD c = { x, y };
     SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), c);
@@ -115,7 +116,21 @@ bool canMove(int dx, int dy) {
 }
 
 /*them ham removeLine*/
-void removeLine() {};
+void removeLine() {
+    for (int i = H - 2; i >= 0; i--) {
+        bool full = true;
+        for (int j = 1; j < W - 1; j++) {
+            if (board[i][j] == ' ') { full = false; break; }
+        }
+        if (full) {
+            for (int k = i; k > 0; k--)
+                for (int j = 1; j < W - 1; j++)
+                    board[k][j] = board[k-1][j];
+            i++;
+            if (speed > 50) speed -= 10;
+        }
+    }
+}
 
 int main()
 {
@@ -140,7 +155,7 @@ int main()
         }
         block2Board();
         draw();
-        _sleep(200);
+        _sleep(speed);
     }
     return 0;
 }
