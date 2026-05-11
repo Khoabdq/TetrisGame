@@ -75,6 +75,8 @@ char blocks[][4][4] = {
 int x = 4, y = 0, b = 1;
 int speed = 200;
 int linesCleared = 0;
+int validBlocks[] = {0, 2, 9, 11, 12, 13, 14, 15};
+
 void gotoxy(int x, int y) {
     COORD c = { x, y };
     SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), c);
@@ -82,7 +84,7 @@ void gotoxy(int x, int y) {
 void boardDelBlock() {
     for (int i = 0; i < 4; i++)
         for (int j = 0; j < 4; j++)
-            if (blocks[b][i][j] != ' ' && y + j < H)
+           if (blocks[b][i][j] != ' ' && y + i < H)
                 board[y + i][x + j] = ' ';
 }
 void block2Board() {
@@ -169,7 +171,7 @@ void rotateBlock() {
 int main()
 {
     srand(time(0));
-    b = rand() % 7;
+    b = validBlocks[rand() % 8];
     system("cls");
     initBoard();
     while (1) {
@@ -191,7 +193,7 @@ int main()
             if (removed > 0) {
                 speed = max(50, speed - removed * 10);
             }
-            x = 5; y = 0; b = rand() % 7;
+            x = 5; y = 0;b = validBlocks[rand() % 8];
         }
         block2Board();
         draw();
