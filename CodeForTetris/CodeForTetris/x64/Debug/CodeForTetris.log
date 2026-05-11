@@ -1,6 +1,6 @@
 ﻿  CodeForTetris.cpp
-C:\Users\DELL\TetrisGame\CodeForTetris\CodeForTetris\CodeForTetris.cpp(80,17): warning C4838: conversion from 'int' to 'SHORT' requires a narrowing conversion
-C:\Users\DELL\TetrisGame\CodeForTetris\CodeForTetris\CodeForTetris.cpp(80,20): warning C4838: conversion from 'int' to 'SHORT' requires a narrowing conversion
-C:\Users\DELL\TetrisGame\CodeForTetris\CodeForTetris\CodeForTetris.cpp(156,15): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
-  LINK : C:\Users\DELL\TetrisGame\CodeForTetris\x64\Debug\CodeForTetris.exe not found or not built by the last incremental link; performing full link
-  CodeForTetris.vcxproj -> C:\Users\DELL\TetrisGame\CodeForTetris\x64\Debug\CodeForTetris.exe
+D:\Tài liệu UIT\HK2 25-26\Kỹ năng nghề nghiệp\Tetris game\tetris game\CodeforTetris\TetrisGame\CodeForTetris\CodeForTetris\CodeForTetris.cpp(51,17): warning C4838: conversion from 'int' to 'SHORT' requires a narrowing conversion
+D:\Tài liệu UIT\HK2 25-26\Kỹ năng nghề nghiệp\Tetris game\tetris game\CodeforTetris\TetrisGame\CodeForTetris\CodeForTetris\CodeForTetris.cpp(51,20): warning C4838: conversion from 'int' to 'SHORT' requires a narrowing conversion
+D:\Tài liệu UIT\HK2 25-26\Kỹ năng nghề nghiệp\Tetris game\tetris game\CodeforTetris\TetrisGame\CodeForTetris\CodeForTetris\CodeForTetris.cpp(143,15): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
+  LINK : D:\Tài liệu UIT\HK2 25-26\Kỹ năng nghề nghiệp\Tetris game\tetris game\CodeforTetris\TetrisGame\CodeForTetris\x64\Debug\CodeForTetris.exe not found or not built by the last incremental link; performing full link
+  CodeForTetris.vcxproj -> D:\Tài liệu UIT\HK2 25-26\Kỹ năng nghề nghiệp\Tetris game\tetris game\CodeforTetris\TetrisGame\CodeForTetris\x64\Debug\CodeForTetris.exe
