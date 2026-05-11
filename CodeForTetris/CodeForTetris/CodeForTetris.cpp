@@ -1,6 +1,3 @@
-// CodeForTetris.cpp : This file contains the 'main' function. Program execution begins and ends there.
-//
-
 #include <iostream>
 #include <conio.h>
 #include <windows.h>
@@ -76,6 +73,8 @@ char blocks[][4][4] = {
 };
 
 int x = 4, y = 0, b = 1;
+int speed = 200;
+int linesCleared = 0;
 void gotoxy(int x, int y) {
     COORD c = { x, y };
     SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), c);
@@ -115,22 +114,23 @@ bool canMove(int dx, int dy) {
             }
     return true;
 }
-void removeLine() {
+int removeLine() {
+    int count = 0;
     for (int i = H - 2; i >= 1; i--) {
         bool full = true;
         for (int j = 1; j < W - 1; j++) {
             if (board[i][j] == ' ') { full = false; break; }
         }
         if (full) {
-
             for (int k = i; k >= 1; k--)
                 for (int j = 1; j < W - 1; j++)
                     board[k][j] = board[k - 1][j];
             i++;
+            count++;
         }
     }
+    return count;
 }
-};
 bool canRotate() {
     char temp[4][4];
 
@@ -186,12 +186,16 @@ int main()
         if (canMove(0, 1)) y++;
         else {
             block2Board();
-            removeLine();
+            int removed = removeLine();
+            linesCleared += removed;
+            if (removed > 0) {
+                speed = max(50, speed - removed * 10);
+            }
             x = 5; y = 0; b = rand() % 7;
         }
         block2Board();
         draw();
-        Sleep(200);
+        Sleep(speed);
     }
     return 0;
 }
