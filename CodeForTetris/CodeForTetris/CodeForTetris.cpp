@@ -190,7 +190,11 @@ int main()
         if (canMove(0, 1)) y++;
         else {
             block2Board();
-            removeLine();
+            int removed = removeLine();
+            linesCleared += removed;
+            if (removed > 0) {
+                speed = max(50, speed - removed * 10);
+            }
             x = 5; y = 0; b = rand() % 7;
         }
         block2Board();
