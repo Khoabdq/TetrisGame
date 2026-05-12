@@ -7,3 +7,24 @@ Release/
 *.pdb
 *.ilk
 *.vcxproj.user
+*.user
+*.userosscache
+*.sln.docstates
+*.suo
+*.db
+*.opendb
+
+# Kết quả biên dịch (Build outputs)
+*.obj
+*.lib
+*.pdb
+*.exp
+*.ilk
+*.exe
+*.out
+*.app
+*.log
+*.tlog
+*.lastbuildstate
+*.unsuccessfulbuild
+
