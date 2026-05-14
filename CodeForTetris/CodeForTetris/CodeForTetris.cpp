@@ -5,6 +5,7 @@
 using namespace std;
 #define H 20
 #define W 15
+#define OFFSET_X 30 // Độ dời của bảng chơi sang bên phải để nhường chỗ cho panel bên trái
 
 class Tetris {
 private:
@@ -14,22 +15,20 @@ private:
     int speed;
     int linesCleared;
     int validBlocks[8];
+    bool isPaused; 
+    bool isRunning;
 
     void gotoxy(int x, int y) {
-        COORD c = { x, y };
+        COORD c = { (SHORT)x, (SHORT)y };
         SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), c);
     }
 
 public:
 
     Tetris() {
-        x = 4; y = 0; b = 1;
-        speed = 200;
-        linesCleared = 0;
-
-        // Khởi tạo validBlocks
-        int initialValid[] = { 0, 2, 9, 11, 12, 13, 14, 15 };
-        for (int i = 0; i < 8; i++) validBlocks[i] = initialValid[i];
+        isPaused = false;
+        isRunning = true;
+        initGameVariables();
 
         // Khởi tạo dữ liệu các khối gạch
         char tempBlocks[7][4][4] = {
@@ -42,6 +41,14 @@ public:
             {{' ',' ',' ',' '}, {' ',' ','L',' '}, {'L','L','L',' '}, {' ',' ',' ',' '}}  // L
         };
         memcpy(blocks, tempBlocks, sizeof(blocks));
+    }
+
+    void initGameVariables() {
+        x = 4; y = 0; b = 1;
+        speed = 200;
+        linesCleared = 0;
+        int initialValid[] = { 0, 2, 9, 11, 12, 13, 14, 15 };
+        for (int i = 0; i < 8; i++) validBlocks[i] = initialValid[i];
     }
 
     void boardDelBlock() {
@@ -62,22 +69,56 @@ public:
                 if ((i == H - 1) || (j == 0) || (j == W - 1)) board[i][j] = '#';
                 else board[i][j] = ' ';
     }
+
+    /*VE BAN BEN TRAI MAN HINH GAMEPLAY*/
+
+    void drawSidePanel() {
+        gotoxy(2, 2);  cout << "==========================";
+        gotoxy(2, 3);  cout << "      TETRIS CONTROL      ";
+        gotoxy(2, 4);  cout << "==========================";
+
+        gotoxy(2, 6);  cout << " [W] : Rotate (Xoay)";
+        gotoxy(2, 7);  cout << " [A] : Left   (Trai)";
+        gotoxy(2, 8);  cout << " [D] : Right  (Phai)";
+        gotoxy(2, 9);  cout << " [S] : Down   (Xuong)";
+
+        gotoxy(2, 11); cout << "--------------------------";
+        gotoxy(2, 12); cout << " [P] : PAUSE  (Tam dung)";
+        gotoxy(2, 13); cout << " [R] : RESET  (Choi lai)";
+        gotoxy(2, 14); cout << " [Q] : QUIT   (Thoat)";
+        gotoxy(2, 15); cout << "--------------------------";
+
+        gotoxy(2, 17); cout << " Lines Cleared: " << linesCleared;
+        gotoxy(2, 18); cout << " Speed: " << speed << "ms";
+
+        if (isPaused) {
+            gotoxy(2, 20); cout << " STATUS: >> PAUSED <<  ";
+        }
+        else {
+            gotoxy(2, 20); cout << " STATUS: Playing...    ";
+        }
+    }
+
+    void resetGame() {
+        initGameVariables();
+        initBoard();
+        system("cls");
+        b = validBlocks[rand() % 8];
+        isPaused = false;
+    }
+
+
     void draw() {
-        gotoxy(0, 0);
-        for (int i = 0; i < H; i++, cout << endl)
+        drawSidePanel();
+        // Vẽ Board game 
+        for (int i = 0; i < H; i++) {
+            gotoxy(OFFSET_X, i);
             for (int j = 0; j < W; j++) {
-                if (board[i][j] == '#') {
-                    // Có thể dùng ký tự ASCII 219 (tùy font console) hoặc in 2 dấu vạch
-                    cout << "##";
-                }
-                else if (board[i][j] == ' ') {
-                    cout << "  "; // 2 dấu cách cho không gian rỗng
-                }
-                else {
-                    // In ra hình vuông cho các khối gạch
-                    cout << "[]";
-                }
+                if (board[i][j] == '#') cout << "##";
+                else if (board[i][j] == ' ') cout << "  ";
+                else cout << "[]";
             }
+        }
     }
     bool canMove(int dx, int dy) {
         for (int i = 0; i < 4; i++)
@@ -187,40 +228,81 @@ public:
             }
         }
     }
+
     void run() {
-        int menuChoice = showMenu();
-        if (menuChoice == 1) {
+        
+        /*HIEN THI MENU*/
+        int choice = showMenu();
+        if (choice == 1) {
             system("cls");
-            cout << "Cam on ban da choi game. Hen gap lai!\n";
+            cout << "Hen gap lai!\n";
             return;
         }
+
+        /*MAN HINH CHOI GAME*/
         srand((unsigned int)time(0));
-        b = validBlocks[rand() % 8];
         system("cls");
         initBoard();
-        while (1) {
-            boardDelBlock();
-            if (_kbhit()) {
-                char c = _getch();
-                if (c == 'a' && canMove(-1, 0)) x--;
-                if (c == 'd' && canMove(1, 0)) x++;
-                if (c == 's' && canMove(0, 1))  y++;
-                if (c == 'w' && canRotate()) rotateBlock();
-                if (c == 'q') break;
-            }
-            if (canMove(0, 1)) y++;
-            else {
-                block2Board();
-                int removed = removeLine();
-                linesCleared += removed;
-                if (removed > 0) {
-                    speed = max(50, speed - removed * 10);
+        b = rand() % 7; // Lấy random khối gạch
+
+        while (isRunning) {
+            // VÒNG LẶP KIỂM TRA PHÍM (Tối ưu phản hồi)
+            // Thay vì Sleep(speed), ta chia nhỏ ra thành nhiều lần Sleep(10)
+            for (int i = 0; i < speed / 10; i++) {
+                if (_kbhit()) {
+                    char c = _getch();
+                    if (c == 'q' || c == 'Q') { isRunning = false; break; }
+                    if (c == 'r' || c == 'R') {
+                        system("cls");
+                        initGameVariables();
+                        initBoard();
+                        b = rand() % 7;
+                        break;
+                    }
+                    if (c == 'p' || c == 'P') {
+                        isPaused = !isPaused;
+                        drawSidePanel(); // Cập nhật trạng thái ngay lập tức
+                    }
+
+                    if (!isPaused) {
+                        boardDelBlock();
+                        if (c == 'a' && canMove(-1, 0)) x--;
+                        if (c == 'd' && canMove(1, 0)) x++;
+                        if (c == 's' && canMove(0, 1)) y++;
+                        if (c == 'w' && canRotate()) rotateBlock();
+                        block2Board();
+                        draw(); // Vẽ lại ngay khi có thao tác phím
+                    }
                 }
-                x = 5; y = 0; b = validBlocks[rand() % 8];
+                Sleep(10);
             }
-            block2Board();
-            draw();
-            Sleep(speed);
+
+            // LOGIC TỰ RƠI (Chỉ chạy khi không Pause)
+            if (isRunning && !isPaused) {
+                boardDelBlock();
+                if (canMove(0, 1)) {
+                    y++;
+                }
+                else {
+                    block2Board();
+                    int removed = removeLine();
+                    linesCleared += removed;
+                    if (removed > 0) speed = max(50, speed - removed * 10);
+                    x = 4; y = 0; b = rand() % 7;
+                    // Kiểm tra thua cuộc
+                    if (!canMove(0, 0)) {
+                        system("cls");
+                        gotoxy(10, 10); cout << "GAME OVER! Lines: " << linesCleared;
+                        Sleep(2000);
+                        isRunning = false;
+                    }
+                }
+                block2Board();
+                draw();
+            }
+            else if (isPaused) {
+                draw(); // Vẫn vẽ để hiện chữ PAUSED
+            }
         }
     }
 };
