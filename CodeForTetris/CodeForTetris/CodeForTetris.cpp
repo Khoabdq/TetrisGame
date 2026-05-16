@@ -268,6 +268,30 @@ public:
         }
     }
 
+    void showGameOver() {
+        system("cls");
+
+        int cx = 20;
+
+        gotoxy(cx, 3);  cout << "================================";
+        gotoxy(cx, 4);  cout << "          GAME  OVER           ";
+        gotoxy(cx, 5);  cout << "================================";
+
+        gotoxy(cx, 7);  cout << "   Score      :  " << score;
+        gotoxy(cx, 8);  cout << "   Lines      :  " << linesCleared;
+        gotoxy(cx, 9);  cout << "   Best Score :  " << maxScore;
+
+        int m = elapsedSeconds / 60;
+        int s = elapsedSeconds % 60;
+        gotoxy(cx, 10); cout << "   Time       :  " << m << "m " << s << "s";
+
+        gotoxy(cx, 12); cout << "--------------------------------";
+        gotoxy(cx, 13); cout << "   >> Back to Menu  [Enter] << ";
+        gotoxy(cx, 14); cout << "--------------------------------";
+
+        while (_getch() != '\r');
+    }
+
     void run() {
 
         /*HIEN THI MENU*/
@@ -331,10 +355,7 @@ public:
                     x = 4; y = 0; b = rand() % 7;
                     // Kiểm tra thua cuộc
                     if (!canMove(0, 0)) {
-                        saveMaxScore();
-                        system("cls");
-                        gotoxy(10, 10); cout << "GAME OVER! Lines: " << linesCleared;
-                        Sleep(2000);
+                        showGameOver();
                         isRunning = false;
                     }
                 }
