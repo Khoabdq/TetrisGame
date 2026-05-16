@@ -316,13 +316,26 @@ public:
 
 
         while (!quitApp) {
-
-
             int choice = showMenu();
-            if (choice == 1) {
+
+            if (choice == 3) { // 3: EXIT
                 system("cls");
                 cout << "Hen gap lai!\n";
                 return;
+            }
+            else if (choice == 1) { // 1: TURTORIAL
+                system("cls");
+                cout << "me may beo\n";
+                cout << "\n>> Nhan Enter de quay lai menu <<";
+                while (_getch() != '\r');
+                continue;
+            }
+            else if (choice == 2) { // 2: SETTING
+                system("cls");
+                cout << "me may beo\n";
+                cout << "\n>> Nhan Enter de quay lai menu <<";
+                while (_getch() != '\r');
+                continue;
             }
 
 
