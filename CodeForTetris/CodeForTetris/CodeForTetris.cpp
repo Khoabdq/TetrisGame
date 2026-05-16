@@ -2,6 +2,7 @@
 #include <conio.h>
 #include <windows.h>
 #include <ctime>
+#include <fstream>
 using namespace std;
 #define H 20
 #define W 15
@@ -20,6 +21,8 @@ private:
     int score;
     time_t startTime;
     int elapsedSeconds;
+    int maxScore;
+
     void gotoxy(int x, int y) {
         COORD c = { (SHORT)x, (SHORT)y };
         SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), c);
@@ -30,11 +33,30 @@ private:
         return 0;
     }
 
+    void loadMaxScore() {
+        maxScore = 0;
+        ifstream f("highscore.txt");
+        if (f.is_open()) {
+            f >> maxScore;
+            f.close();
+        }
+    }
+
+    void saveMaxScore() {
+        if (score > maxScore) maxScore = score;
+        ofstream f("highscore.txt");
+        if (f.is_open()) {
+            f<< maxScore;
+            f.close();
+        }
+    }
+
 public:
 
     Tetris() {
         isPaused = false;
         isRunning = true;
+        loadMaxScore();
         initGameVariables();
 
         // Khởi tạo dữ liệu các khối gạch
@@ -104,6 +126,7 @@ public:
 
         gotoxy(2, 17); cout << " Score : " << score << "          ";
         gotoxy(2, 18); cout << " Lines : " << linesCleared << "          ";
+        gotoxy(2, 18); cout << " Best Score   : " << maxScore;
         gotoxy(2, 19); cout << " Time  : " << m << "m " << s << "s     ";
         gotoxy(2, 20); cout << " Speed : " << speed << "ms     ";
 
@@ -308,6 +331,7 @@ public:
                     x = 4; y = 0; b = rand() % 7;
                     // Kiểm tra thua cuộc
                     if (!canMove(0, 0)) {
+                        saveMaxScore();
                         system("cls");
                         gotoxy(10, 10); cout << "GAME OVER! Lines: " << linesCleared;
                         Sleep(2000);
