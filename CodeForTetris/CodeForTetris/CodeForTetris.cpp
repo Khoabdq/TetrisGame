@@ -294,7 +294,12 @@ public:
 
     void run() {
 
-        /*HIEN THI MENU*/
+    bool quitApp = false;
+
+
+    while (!quitApp) {
+
+
         int choice = showMenu();
         if (choice == 1) {
             system("cls");
@@ -302,10 +307,12 @@ public:
             return;
         }
 
-        /*MAN HINH CHOI GAME*/
+
         srand((unsigned int)time(0));
         system("cls");
+        initGameVariables();
         initBoard();
+        isRunning = true;
         b = rand() % 7; // Lấy random khối gạch
 
         while (isRunning) {
@@ -314,12 +321,13 @@ public:
             for (int i = 0; i < speed / 10; i++) {
                 if (_kbhit()) {
                     char c = _getch();
-                    if (c == 'q' || c == 'Q') { isRunning = false; break; }
+                    if (c == 'q' || c == 'Q') {
+                        isRunning = false;
+                        quitApp = true;
+                        break;
+                    }
                     if (c == 'r' || c == 'R') {
-                        system("cls");
-                        initGameVariables();
-                        initBoard();
-                        b = rand() % 7;
+                        resetGame();
                         break;
                     }
                     if (c == 'p' || c == 'P') {
@@ -363,10 +371,12 @@ public:
                 draw();
             }
             else if (isPaused) {
-                draw(); // Vẫn vẽ để hiện chữ PAUSED
+                draw();
             }
         }
+
     }
+}
 };
 
 int main() {
