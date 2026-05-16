@@ -3,6 +3,7 @@
 #include <windows.h>
 #include <ctime>
 #include <fstream>
+#include <string>
 using namespace std;
 #define H 20
 #define W 15
@@ -219,47 +220,65 @@ public:
             for (int j = 0; j < 4; j++)
                 blocks[b][i][j] = temp[i][j];
     }
+    /* MENU CHÍNH ĐƯỢC CẬP NHẬT GIAO DIỆN KHUNG CHỮ NHẬT */
     int showMenu() {
-        int selectedItem = 0; // 0 là Play, 1 là Exit
+        int selectedItem = 0; // 0: Playgame, 1: Exit, 2: Help, 3: Settings
+        HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+
+        string options[4] = { "PLAYGAME", "TURTORIAL", "SETTING", "EXIT"};
 
         while (true) {
             system("cls"); // Xóa màn hình
+            SetConsoleTextAttribute(hConsole, 7); // Màu trắng mặc định
 
-            cout << "====================================\n";
-            cout << "             TETRIS GAME            \n";
-            cout << "====================================\n\n";
-
-            // Hiển thị nút Play
-            if (selectedItem == 0) {
-                cout << "          >>  PLAY  <<\n";
-            }
-            else {
-                cout << "              PLAY    \n";
-            }
-
-            // Hiển thị nút Exit
-            if (selectedItem == 1) {
-                cout << "          >>  EXIT  <<\n";
-            }
-            else {
-                cout << "              EXIT    \n";
+            // Vẽ viền ngoài cùng tỉ lệ và kích thước với bảng main game (20 dòng x 30 cột)
+            for (int i = 0; i < H; i++) {
+                gotoxy(OFFSET_X, i);
+                for (int j = 0; j < W; j++) {
+                    // Nếu là biên trên, biên dưới, biên trái, biên phải thì in "##"
+                    if (i == 0 || i == H - 1 || j == 0 || j == W - 1) {
+                        cout << "##";
+                    }
+                    else {
+                        cout << "  "; // Không gian rỗng bên trong
+                    }
+                }
             }
 
-            cout << "\n------------------------------------\n";
-            cout << " Su dung phim 'w' (len) va 's' (xuong)\n";
-            cout << " Nhan 'Enter' de chon.\n";
+            // In tiêu đề ở giữa khung
+            gotoxy(OFFSET_X + 8, 3);
+            SetConsoleTextAttribute(hConsole, 11); // Đổi màu xanh lơ cho title
+            cout << "=== TETRIS ===";
+            SetConsoleTextAttribute(hConsole, 7);
 
+            // In các tùy chọn căn giữa
+            for (int i = 0; i < 4; i++) {
+                // Thuật toán căn giữa text: (Chiều rộng tổng là 30. Tâm là 15)
+                int len = options[i].length();
+                int x_pos = OFFSET_X + 15 - (len / 2) - 3; // Trừ hao 3 kí tự ">> "
+
+                gotoxy(x_pos, 7 + i * 2); // Mỗi nút cách nhau 2 dòng
+
+                if (selectedItem == i) {
+                    SetConsoleTextAttribute(hConsole, 14); // Màu Vàng cho nút đang chọn
+                    cout << ">> " << options[i] << " <<";
+                    SetConsoleTextAttribute(hConsole, 7);
+                }
+                else {
+                    cout << "   " << options[i] << "   ";
+                }
+            }
             char c = _getch(); // Nhận phím từ người dùng
 
             if (c == 'w' || c == 'W') {
                 selectedItem--;
-                if (selectedItem < 0) selectedItem = 1; // Cuộn từ trên xuống dưới
+                if (selectedItem < 0) selectedItem = 3;
             }
             else if (c == 's' || c == 'S') {
                 selectedItem++;
-                if (selectedItem > 1) selectedItem = 0; // Cuộn từ dưới lên trên
+                if (selectedItem > 3) selectedItem = 0;
             }
-            else if (c == '\r') { // Phím Enter trong console thường có mã '\r' (Carriage Return)
+            else if (c == '\r') { // Phím Enter
                 return selectedItem;
             }
         }
