@@ -18,6 +18,8 @@ private:
     bool isPaused;
     bool isRunning;
     int score;
+    time_t startTime;
+    int elapsedSeconds;
     void gotoxy(int x, int y) {
         COORD c = { (SHORT)x, (SHORT)y };
         SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), c);
@@ -53,6 +55,8 @@ public:
         speed = 200;
         score = 0;
         linesCleared = 0;
+        startTime = time(0);
+        elapsedSeconds = 0;
         int initialValid[] = { 0, 2, 9, 11, 12, 13, 14, 15 };
         for (int i = 0; i < 8; i++) validBlocks[i] = initialValid[i];
     }
@@ -93,17 +97,23 @@ public:
         gotoxy(2, 13); cout << " [R] : RESET  (Choi lai)";
         gotoxy(2, 14); cout << " [Q] : QUIT   (Thoat)";
         gotoxy(2, 15); cout << "--------------------------";
+
+        elapsedSeconds = (int)difftime(time(0), startTime);
+        int m = elapsedSeconds / 60;
+        int s = elapsedSeconds % 60;
+
         gotoxy(2, 17); cout << " Score : " << score << "          ";
         gotoxy(2, 18); cout << " Lines : " << linesCleared << "          ";
-        gotoxy(2, 18); cout << " Speed: " << speed << "ms";
+        gotoxy(2, 19); cout << " Time  : " << m << "m " << s << "s     ";
+        gotoxy(2, 20); cout << " Speed : " << speed << "ms     ";
 
+        gotoxy(2, 22); cout << "--------------------------";
         if (isPaused) {
-            gotoxy(2, 20); cout << " STATUS: >> PAUSED <<  ";
+            gotoxy(2, 23); cout << " STATUS: >> PAUSED <<  ";
+        } else {
+            gotoxy(2, 23); cout << " STATUS: Playing...    ";
         }
-        else {
-            gotoxy(2, 20); cout << " STATUS: Playing...    ";
-        }
-    }
+}
 
     void resetGame() {
         initGameVariables();
