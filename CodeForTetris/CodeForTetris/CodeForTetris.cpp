@@ -7,7 +7,8 @@
 using namespace std;
 #define H 20
 #define W 15
-#define OFFSET_X 30 // Độ dời của bảng chơi sang bên phải để nhường chỗ cho panel bên trái
+#define OFFSET_X 30
+#define OFFSET_RIGHT_X 65 // Độ dời của bảng chơi sang bên phải để nhường chỗ cho panel bên trái
 
 class Tetris {
 private:
@@ -102,7 +103,8 @@ public:
 
     /*VE BAN BEN TRAI MAN HINH GAMEPLAY*/
 
-    void drawSidePanel() {
+   // Hàm vẽ bảng hướng dẫn bên tay trái
+    void drawLeftPanel() {
         gotoxy(2, 2);  cout << "==========================";
         gotoxy(2, 3);  cout << "      TETRIS CONTROL      ";
         gotoxy(2, 4);  cout << "==========================";
@@ -117,23 +119,33 @@ public:
         gotoxy(2, 13); cout << " [R] : RESET  (Choi lai)";
         gotoxy(2, 14); cout << " [Q] : QUIT   (Thoat)";
         gotoxy(2, 15); cout << "--------------------------";
+    }
 
-        elapsedSeconds = (int)difftime(time(0), startTime);
+    void drawRightPanel() {
+        int elapsedSeconds = (int)difftime(time(0), startTime);
         int m = elapsedSeconds / 60;
         int s = elapsedSeconds % 60;
 
-        gotoxy(2, 17); cout << " Score : " << score << "          ";
-        gotoxy(2, 18); cout << " Best  : " << maxScore << "          ";
-        gotoxy(2, 19); cout << " Lines : " << linesCleared << "          ";
-        gotoxy(2, 20); cout << " Time  : " << m << "m " << s << "s     ";
-        gotoxy(2, 21); cout << " Speed : " << speed << "ms     ";
+        int rx = OFFSET_RIGHT_X; // Sử dụng biến ngắn gọn cho tọa độ X bên phải
 
-        gotoxy(2, 22); cout << "--------------------------";
+        gotoxy(rx, 2);  cout << "==========================";
+        gotoxy(rx, 3);  cout << "       GAME STATUS        ";
+        gotoxy(rx, 4);  cout << "==========================";
+
+        gotoxy(rx, 6);  cout << " Score : " << score << "          ";
+        gotoxy(rx, 7);  cout << " Best  : " << maxScore << "          ";
+        gotoxy(rx, 8);  cout << " Lines : " << linesCleared << "          ";
+        gotoxy(rx, 9);  cout << " Time  : " << m << "m " << s << "s     ";
+        gotoxy(rx, 10); cout << " Speed : " << speed << "ms     ";
+
+        gotoxy(rx, 12); cout << "--------------------------";
         if (isPaused) {
-            gotoxy(2, 23); cout << " STATUS: >> PAUSED <<  ";
-        } else {
-            gotoxy(2, 23); cout << " STATUS: Playing...    ";
+            gotoxy(rx, 13); cout << " STATUS: >> PAUSED <<  ";
         }
+        else {
+            gotoxy(rx, 13); cout << " STATUS: Playing...    ";
+        }
+        gotoxy(rx, 14); cout << "--------------------------";
     }
 
     void resetGame() {
@@ -146,7 +158,9 @@ public:
 
 
     void draw() {
-        drawSidePanel();
+        drawLeftPanel();
+        drawRightPanel();
+
         // Vẽ Board game
         for (int i = 0; i < H; i++) {
             gotoxy(OFFSET_X, i);
@@ -225,7 +239,7 @@ public:
         int selectedItem = 0; // 0: Playgame, 1: Exit, 2: Help, 3: Settings
         HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
 
-        string options[4] = { "PLAYGAME", "TURTORIAL", "SETTING", "EXIT"};
+        string options[4] = { "PLAYGAME", "TUTORIAL", "SETTING", "EXIT"};
 
         while (true) {
             system("cls"); // Xóa màn hình
@@ -323,7 +337,7 @@ public:
                 cout << "Hen gap lai!\n";
                 return;
             }
-            else if (choice == 1) { // 1: TURTORIAL
+            else if (choice == 1) { // 1: TUTORIAL
                 system("cls");
                 cout << "me may beo\n";
                 cout << "\n>> Nhan Enter de quay lai menu <<";
@@ -348,7 +362,6 @@ public:
 
             while (isRunning) {
             // VÒNG LẶP KIỂM TRA PHÍM (Tối ưu phản hồi)
-            // Thay vì Sleep(speed), ta chia nhỏ ra thành nhiều lần Sleep(10)
                 for (int i = 0; i < speed / 10; i++) {
                     if (_kbhit()) {
                         char c = _getch();
@@ -363,7 +376,8 @@ public:
                         }
                         if (c == 'p' || c == 'P') {
                             isPaused = !isPaused;
-                            drawSidePanel(); // Cập nhật trạng thái ngay lập tức
+                            drawLeftPanel(); // Cập nhật trạng thái ngay lập tức
+                            drawRightPanel();
                         }
 
                         if (!isPaused) {
@@ -392,7 +406,7 @@ public:
                         score += calculateScore(removed);
                         if (removed > 0) speed = max(50, speed - removed * 10);
                         x = 4; y = 0; b = rand() % 7;
-                        // Kiểm tra thua cuộc
+                        // Kiểm tra tinh trang thang thua
                         if (!canMove(0, 0)) {
                             showGameOver();
                             isRunning = false;
