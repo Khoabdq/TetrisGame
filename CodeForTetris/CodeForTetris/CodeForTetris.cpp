@@ -15,12 +15,17 @@ private:
     int speed;
     int linesCleared;
     int validBlocks[8];
-    bool isPaused; 
+    bool isPaused;
     bool isRunning;
-
+    int score;
     void gotoxy(int x, int y) {
         COORD c = { (SHORT)x, (SHORT)y };
         SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), c);
+    }
+    int calculateScore(int lines) {
+        int pts[] = { 0, 100, 300, 500, 800 };
+        if (lines >= 1 && lines <= 4) return pts[lines];
+        return 0;
     }
 
 public:
@@ -46,6 +51,7 @@ public:
     void initGameVariables() {
         x = 4; y = 0; b = 1;
         speed = 200;
+        score = 0;
         linesCleared = 0;
         int initialValid[] = { 0, 2, 9, 11, 12, 13, 14, 15 };
         for (int i = 0; i < 8; i++) validBlocks[i] = initialValid[i];
@@ -87,8 +93,8 @@ public:
         gotoxy(2, 13); cout << " [R] : RESET  (Choi lai)";
         gotoxy(2, 14); cout << " [Q] : QUIT   (Thoat)";
         gotoxy(2, 15); cout << "--------------------------";
-
-        gotoxy(2, 17); cout << " Lines Cleared: " << linesCleared;
+        gotoxy(2, 17); cout << " Score : " << score << "          ";
+        gotoxy(2, 18); cout << " Lines : " << linesCleared << "          ";
         gotoxy(2, 18); cout << " Speed: " << speed << "ms";
 
         if (isPaused) {
@@ -110,7 +116,7 @@ public:
 
     void draw() {
         drawSidePanel();
-        // Vẽ Board game 
+        // Vẽ Board game
         for (int i = 0; i < H; i++) {
             gotoxy(OFFSET_X, i);
             for (int j = 0; j < W; j++) {
@@ -230,7 +236,7 @@ public:
     }
 
     void run() {
-        
+
         /*HIEN THI MENU*/
         int choice = showMenu();
         if (choice == 1) {
@@ -287,6 +293,7 @@ public:
                     block2Board();
                     int removed = removeLine();
                     linesCleared += removed;
+                    score += calculateScore(removed);
                     if (removed > 0) speed = max(50, speed - removed * 10);
                     x = 4; y = 0; b = rand() % 7;
                     // Kiểm tra thua cuộc
