@@ -2,6 +2,7 @@
 #include <conio.h>
 #include <windows.h>
 #include <ctime>
+#include <fstream>
 using namespace std;
 #define H 20
 #define W 15
@@ -14,13 +15,39 @@ private:
     int x, y, b;
     int speed;
     int linesCleared;
-    int validBlocks[8];
-    bool isPaused; 
+    bool isPaused;
     bool isRunning;
+    int score;
+    time_t startTime;
+    int elapsedSeconds;
+    int maxScore;
 
     void gotoxy(int x, int y) {
         COORD c = { (SHORT)x, (SHORT)y };
         SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), c);
+    }
+    int calculateScore(int lines) {
+        int pts[] = { 0, 100, 300, 500, 800 };
+        if (lines >= 1 && lines <= 4) return pts[lines];
+        return 0;
+    }
+
+    void loadMaxScore() {
+        maxScore = 0;
+        ifstream f("highscore.txt");
+        if (f.is_open()) {
+            f >> maxScore;
+            f.close();
+        }
+    }
+
+    void saveMaxScore() {
+        if (score > maxScore) maxScore = score;
+        ofstream f("highscore.txt");
+        if (f.is_open()) {
+            f<< maxScore;
+            f.close();
+        }
     }
 
 public:
@@ -28,6 +55,7 @@ public:
     Tetris() {
         isPaused = false;
         isRunning = true;
+        loadMaxScore();
         initGameVariables();
 
         // Khởi tạo dữ liệu các khối gạch
@@ -46,9 +74,10 @@ public:
     void initGameVariables() {
         x = 4; y = 0; b = 1;
         speed = 200;
+        score = 0;
         linesCleared = 0;
-        int initialValid[] = { 0, 2, 9, 11, 12, 13, 14, 15 };
-        for (int i = 0; i < 8; i++) validBlocks[i] = initialValid[i];
+        startTime = time(0);
+        elapsedSeconds = 0;
     }
 
     void boardDelBlock() {
@@ -88,14 +117,21 @@ public:
         gotoxy(2, 14); cout << " [Q] : QUIT   (Thoat)";
         gotoxy(2, 15); cout << "--------------------------";
 
-        gotoxy(2, 17); cout << " Lines Cleared: " << linesCleared;
-        gotoxy(2, 18); cout << " Speed: " << speed << "ms";
+        elapsedSeconds = (int)difftime(time(0), startTime);
+        int m = elapsedSeconds / 60;
+        int s = elapsedSeconds % 60;
 
+        gotoxy(2, 17); cout << " Score : " << score << "          ";
+        gotoxy(2, 18); cout << " Best  : " << maxScore << "          ";
+        gotoxy(2, 19); cout << " Lines : " << linesCleared << "          ";
+        gotoxy(2, 20); cout << " Time  : " << m << "m " << s << "s     ";
+        gotoxy(2, 21); cout << " Speed : " << speed << "ms     ";
+
+        gotoxy(2, 22); cout << "--------------------------";
         if (isPaused) {
-            gotoxy(2, 20); cout << " STATUS: >> PAUSED <<  ";
-        }
-        else {
-            gotoxy(2, 20); cout << " STATUS: Playing...    ";
+            gotoxy(2, 23); cout << " STATUS: >> PAUSED <<  ";
+        } else {
+            gotoxy(2, 23); cout << " STATUS: Playing...    ";
         }
     }
 
@@ -103,14 +139,14 @@ public:
         initGameVariables();
         initBoard();
         system("cls");
-        b = validBlocks[rand() % 8];
+        b = rand() % 7;
         isPaused = false;
     }
 
 
     void draw() {
         drawSidePanel();
-        // Vẽ Board game 
+        // Vẽ Board game
         for (int i = 0; i < H; i++) {
             gotoxy(OFFSET_X, i);
             for (int j = 0; j < W; j++) {
@@ -229,80 +265,119 @@ public:
         }
     }
 
-    void run() {
-        
-        /*HIEN THI MENU*/
-        int choice = showMenu();
-        if (choice == 1) {
-            system("cls");
-            cout << "Hen gap lai!\n";
-            return;
-        }
-
-        /*MAN HINH CHOI GAME*/
-        srand((unsigned int)time(0));
+    void showGameOver() {
+        elapsedSeconds = (int)difftime(time(0), startTime);
+        saveMaxScore();
         system("cls");
-        initBoard();
-        b = rand() % 7; // Lấy random khối gạch
 
-        while (isRunning) {
+        int cx = 20;
+
+        gotoxy(cx, 3);  cout << "================================";
+        gotoxy(cx, 4);  cout << "          GAME  OVER           ";
+        gotoxy(cx, 5);  cout << "================================";
+
+        gotoxy(cx, 7);  cout << "   Score      :  " << score;
+        gotoxy(cx, 8);  cout << "   Lines      :  " << linesCleared;
+        gotoxy(cx, 9);  cout << "   Best Score :  " << maxScore;
+
+        int m = elapsedSeconds / 60;
+        int s = elapsedSeconds % 60;
+        gotoxy(cx, 10); cout << "   Time       :  " << m << "m " << s << "s";
+
+        gotoxy(cx, 12); cout << "--------------------------------";
+        gotoxy(cx, 13); cout << "   >> Back to Menu  [Enter] << ";
+        gotoxy(cx, 14); cout << "--------------------------------";
+
+        while (_getch() != '\r');
+    }
+
+    void run() {
+
+        bool quitApp = false;
+
+
+        while (!quitApp) {
+
+
+            int choice = showMenu();
+            if (choice == 1) {
+                system("cls");
+                cout << "Hen gap lai!\n";
+                return;
+            }
+
+
+            srand((unsigned int)time(0));
+            system("cls");
+            initGameVariables();
+            initBoard();
+            isRunning = true;
+            b = rand() % 7; // Lấy random khối gạch
+
+            while (isRunning) {
             // VÒNG LẶP KIỂM TRA PHÍM (Tối ưu phản hồi)
             // Thay vì Sleep(speed), ta chia nhỏ ra thành nhiều lần Sleep(10)
-            for (int i = 0; i < speed / 10; i++) {
-                if (_kbhit()) {
-                    char c = _getch();
-                    if (c == 'q' || c == 'Q') { isRunning = false; break; }
-                    if (c == 'r' || c == 'R') {
-                        system("cls");
-                        initGameVariables();
-                        initBoard();
-                        b = rand() % 7;
-                        break;
-                    }
-                    if (c == 'p' || c == 'P') {
-                        isPaused = !isPaused;
-                        drawSidePanel(); // Cập nhật trạng thái ngay lập tức
-                    }
+                for (int i = 0; i < speed / 10; i++) {
+                    if (_kbhit()) {
+                        char c = _getch();
+                        if (c == 'q' || c == 'Q') {
+                            isRunning = false;
+                            quitApp = true;
+                            break;
+                        }
+                        if (c == 'r' || c == 'R') {
+                            resetGame();
+                            break;
+                        }
+                        if (c == 'p' || c == 'P') {
+                            isPaused = !isPaused;
+                            drawSidePanel(); // Cập nhật trạng thái ngay lập tức
+                        }
 
-                    if (!isPaused) {
-                        boardDelBlock();
-                        if (c == 'a' && canMove(-1, 0)) x--;
-                        if (c == 'd' && canMove(1, 0)) x++;
-                        if (c == 's' && canMove(0, 1)) y++;
-                        if (c == 'w' && canRotate()) rotateBlock();
-                        block2Board();
-                        draw(); // Vẽ lại ngay khi có thao tác phím
+                        if (!isPaused) {
+                            boardDelBlock();
+                            if (c == 'a' && canMove(-1, 0)) x--;
+                            if (c == 'd' && canMove(1, 0)) x++;
+                            if (c == 's' && canMove(0, 1)) y++;
+                            if (c == 'w' && canRotate()) rotateBlock();
+                            block2Board();
+                            draw(); // Vẽ lại ngay khi có thao tác phím
+                        }
                     }
+                    Sleep(10);
                 }
-                Sleep(10);
-            }
 
             // LOGIC TỰ RƠI (Chỉ chạy khi không Pause)
-            if (isRunning && !isPaused) {
-                boardDelBlock();
-                if (canMove(0, 1)) {
-                    y++;
-                }
-                else {
-                    block2Board();
-                    int removed = removeLine();
-                    linesCleared += removed;
-                    if (removed > 0) speed = max(50, speed - removed * 10);
-                    x = 4; y = 0; b = rand() % 7;
-                    // Kiểm tra thua cuộc
-                    if (!canMove(0, 0)) {
-                        system("cls");
-                        gotoxy(10, 10); cout << "GAME OVER! Lines: " << linesCleared;
-                        Sleep(2000);
-                        isRunning = false;
+                if (isRunning && !isPaused) {
+                    boardDelBlock();
+                    if (canMove(0, 1)) {
+                        y++;
                     }
+                    else {
+                        block2Board();
+                        int removed = removeLine();
+                        linesCleared += removed;
+                        score += calculateScore(removed);
+                        if (removed > 0) speed = max(50, speed - removed * 10);
+                        x = 4; y = 0; b = rand() % 7;
+                        // Kiểm tra thua cuộc
+                        if (!canMove(0, 0)) {
+                            showGameOver();
+                            isRunning = false;
+                        }
+                    }
+                    if (isRunning) {
+                            block2Board();
+                            draw();
+                    }
+                    block2Board();
+                    draw();
                 }
-                block2Board();
-                draw();
-            }
-            else if (isPaused) {
-                draw(); // Vẫn vẽ để hiện chữ PAUSED
-            }
+                else if (isPaused) {
+                    draw();
+                }
+                }
+
         }
     }
 };
