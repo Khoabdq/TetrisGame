@@ -35,7 +35,7 @@ class Tetris {
 private:
     char board[H][W] = {};
     char blocks[7][4][4];
-    int blockColors[7] = { 0, 4, 3, 2, 1, 0, 4 };
+    int blockColors[7] = { 0, 1, 2, 3, 4, 5, 6 };
     int colorCode;
     int boardColor[H][W]; // lưu màu cho từng ô
 	int nextBlock = rand() % 7; // khối tiếp theo (hiển thị ở panel bên phải)
@@ -246,14 +246,15 @@ public:
     void SetColorBlock(int colorCode) {
         HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
         switch (colorCode) {
-            case 0: SetConsoleTextAttribute(hConsole, BACKGROUND_BLUE | BACKGROUND_INTENSITY); break; // Xanh dương
-            case 1: SetConsoleTextAttribute(hConsole, BACKGROUND_GREEN | BACKGROUND_INTENSITY); break; // Xanh lá
-            case 2: SetConsoleTextAttribute(hConsole, BACKGROUND_GREEN | BACKGROUND_BLUE | BACKGROUND_INTENSITY); break; // Xanh lơ
-            case 3: SetConsoleTextAttribute(hConsole, BACKGROUND_RED | BACKGROUND_BLUE | BACKGROUND_INTENSITY); break; // Hồng
-            case 4: SetConsoleTextAttribute(hConsole, BACKGROUND_RED | BACKGROUND_GREEN | BACKGROUND_INTENSITY); break; // Vàng
+            case 0: SetConsoleTextAttribute(hConsole, BACKGROUND_BLUE); break; // Màu xanh dương sáng cho khối I
+            case 1: SetConsoleTextAttribute(hConsole, BACKGROUND_GREEN | BACKGROUND_INTENSITY); break; // Màu xanh lá sáng cho khối O
+            case 2: SetConsoleTextAttribute(hConsole, BACKGROUND_GREEN | BACKGROUND_BLUE | BACKGROUND_INTENSITY); break; // Màu xanh lơ sáng cho khối T
+            case 3: SetConsoleTextAttribute(hConsole, BACKGROUND_RED | BACKGROUND_BLUE | BACKGROUND_INTENSITY); break;// Màu tím sáng cho khối J
+            case 4: SetConsoleTextAttribute(hConsole, BACKGROUND_RED | BACKGROUND_GREEN | BACKGROUND_INTENSITY); break;// Màu vàng sáng cho khối S
+            case 5: SetConsoleTextAttribute(hConsole, BACKGROUND_RED | BACKGROUND_GREEN); break;// Màu vàng đậm cho khối Z
+            case 6: SetConsoleTextAttribute(hConsole, BACKGROUND_RED | BACKGROUND_BLUE); break;// Màu đỏ sáng cho khối L
         }
-	}
-
+    }
     void draw() {
         drawLeftPanel();
         drawRightPanel();
@@ -511,24 +512,31 @@ public:
                 int frameHeight = 7;  // cao hơn để ôm nội dung
 
                 HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
-
-                for (int i = 0; i < frameHeight; i++) {
-                    for (int j = 0; j < frameWidth; j++) {
-                        gotoxy(cx + j, i);
-                        if (i == 0 || i == frameHeight - 1 || j == 0 || j == frameWidth - 1) {
-                            SetConsoleTextAttribute(hConsole, BACKGROUND_RED);
-                            cout << "  ";   // chỉ in 1 khoảng trắng để khung đều
-                            SetConsoleTextAttribute(hConsole, FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE);
+				 // Màu ngẫu nhiên cho khung
+                while (true) {
+                    int colorEndCode = rand() % 7;
+                    for (int i = 0; i < frameHeight; i++) {
+                        for (int j = 0; j < frameWidth; j++) {
+                            gotoxy(cx + j, i);
+                            if (i == 0 || i == frameHeight - 1 || j == 0 || j == frameWidth - 1) {
+								SetColorBlock(colorEndCode);
+                                cout << "  ";   // chỉ in 1 khoảng trắng để khung đều
+                                SetConsoleTextAttribute(hConsole, FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE);
+                            }
                         }
                     }
-                }
 
-                // In thông báo bên trong khung
-                gotoxy(cx + 10, 3);
-                SetConsoleTextAttribute(hConsole, FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_INTENSITY);
-                cout << "Hen gap lai!";
-                _getch();
-                return;
+                    // In thông báo bên trong khung
+                    gotoxy(cx + 10, 3);
+					colorEndCode = rand() % 15 + 1; // Màu ngẫu nhiên cho thông báo
+                    SetConsoleTextAttribute(hConsole, colorEndCode);
+                    cout << "Hen gap lai!";
+					Sleep(500);
+                    if(_kbhit() && _getch() == '\r') {
+						exit(0);
+					}
+                }
+               
             }
             else if (choice == 1) { // 1: TUTORIAL
                 system("cls");
