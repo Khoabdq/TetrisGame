@@ -4,6 +4,8 @@
 #include <ctime>
 #include <fstream>
 #include <string>
+#include <cstdlib> //color
+#include <windows.h>
 using namespace std;
 #define H 20
 #define W 15
@@ -14,6 +16,8 @@ class Tetris {
 private:
     char board[H][W] = {};
     char blocks[7][4][4];
+    int blockColors[7] = { 0, 4, 3, 2, 1, 0, 4 };
+    int colorCode;
     int x, y, b;
     int speed;
     int linesCleared;
@@ -62,13 +66,13 @@ public:
 
         // Khởi tạo dữ liệu các khối gạch
         char tempBlocks[7][4][4] = {
-            {{' ',' ',' ',' '}, {'I','I','I','I'}, {' ',' ',' ',' '}, {' ',' ',' ',' '}}, // I
-            {{' ',' ',' ',' '}, {' ','O','O',' '}, {' ','O','O',' '}, {' ',' ',' ',' '}}, // O
-            {{' ',' ',' ',' '}, {' ','T',' ',' '}, {'T','T','T',' '}, {' ',' ',' ',' '}}, // T
-            {{' ',' ',' ',' '}, {' ','S','S',' '}, {'S','S',' ',' '}, {' ',' ',' ',' '}}, // S
-            {{' ',' ',' ',' '}, {'Z','Z',' ',' '}, {' ','Z','Z',' '}, {' ',' ',' ',' '}}, // Z
-            {{' ',' ',' ',' '}, {'J',' ',' ',' '}, {'J','J','J',' '}, {' ',' ',' ',' '}}, // J
-            {{' ',' ',' ',' '}, {' ',' ','L',' '}, {'L','L','L',' '}, {' ',' ',' ',' '}}  // L
+            {{' ',' ',' ',' '}, {'I','I','I','I'}, {' ',' ',' ',' '}, {' ',' ',' ',' '}}, // I 1
+			{{' ',' ',' ',' '}, {' ','O','O',' '}, {' ','O','O',' '}, {' ',' ',' ',' '}}, // O 2
+            {{' ',' ',' ',' '}, {' ','T',' ',' '}, {'T','T','T',' '}, {' ',' ',' ',' '}}, // T 3
+            {{' ',' ',' ',' '}, {' ','S','S',' '}, {'S','S',' ',' '}, {' ',' ',' ',' '}}, // S 4
+            {{' ',' ',' ',' '}, {'Z','Z',' ',' '}, {' ','Z','Z',' '}, {' ',' ',' ',' '}}, // Z 5
+            {{' ',' ',' ',' '}, {'J',' ',' ',' '}, {'J','J','J',' '}, {' ',' ',' ',' '}}, // J 6
+            {{' ',' ',' ',' '}, {' ',' ','L',' '}, {'L','L','L',' '}, {' ',' ',' ',' '}}  // L 7
         };
         memcpy(blocks, tempBlocks, sizeof(blocks));
     }
@@ -97,7 +101,7 @@ public:
     void initBoard() {
         for (int i = 0; i < H; i++)
             for (int j = 0; j < W; j++)
-                if ((i == H - 1) || (j == 0) || (j == W - 1)) board[i][j] = '#';
+                if ((i == H - 1) || (j == 0) || (j == W - 1) ) board[i][j] = '#';
                 else board[i][j] = ' ';
     }
 
@@ -155,7 +159,17 @@ public:
         b = rand() % 7;
         isPaused = false;
     }
+    void SetColorBlock(int colorCode) {
+        HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+        switch (colorCode) {
+            case 0: SetConsoleTextAttribute(hConsole, BACKGROUND_BLUE); break; // Xanh dương
+            case 1: SetConsoleTextAttribute(hConsole, BACKGROUND_GREEN); break; // Xanh lá
+            case 2: SetConsoleTextAttribute(hConsole, BACKGROUND_GREEN | BACKGROUND_BLUE); break; // Xanh lơ
+            case 3: SetConsoleTextAttribute(hConsole, BACKGROUND_RED | BACKGROUND_BLUE); break; // Hồng
+            case 4: SetConsoleTextAttribute(hConsole, BACKGROUND_RED | BACKGROUND_GREEN); break; // Vàng
 
+        }
+	}
 
     void draw() {
         drawLeftPanel();
@@ -165,9 +179,19 @@ public:
         for (int i = 0; i < H; i++) {
             gotoxy(OFFSET_X, i);
             for (int j = 0; j < W; j++) {
-                if (board[i][j] == '#') cout << "##";
+                HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+                if (board[i][j] == '#'|| i == 0) {
+                    SetConsoleTextAttribute(hConsole, BACKGROUND_RED);
+					cout << "  ";
+					SetConsoleTextAttribute(hConsole, FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE);
+                }
                 else if (board[i][j] == ' ') cout << "  ";
-                else cout << "[]";
+                else {
+                    int colorCode = blockColors[b];
+                    SetColorBlock(colorCode);
+                    cout << "  ";
+					SetConsoleTextAttribute(hConsole, FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE); 
+                }
             }
         }
     }
@@ -250,17 +274,28 @@ public:
                 gotoxy(OFFSET_X, i);
                 for (int j = 0; j < W; j++) {
                     // Nếu là biên trên, biên dưới, biên trái, biên phải thì in "##"
+
                     if (i == 0 || i == H - 1 || j == 0 || j == W - 1) {
-                        cout << "##";
+                        //system("color 1F");
+                        
+
+                        // Đổi màu nền xanh lá, chữ đỏ
+                        SetConsoleTextAttribute(hConsole, BACKGROUND_RED | FOREGROUND_RED | FOREGROUND_INTENSITY);
+                        cout << "  ";
+                        SetConsoleTextAttribute(hConsole, FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE);
                     }
                     else {
+                        
                         cout << "  "; // Không gian rỗng bên trong
+                        
                     }
                 }
             }
 
             // In tiêu đề ở giữa khung
             gotoxy(OFFSET_X + 8, 3);
+           
+           
             SetConsoleTextAttribute(hConsole, 11); // Đổi màu xanh lơ cho title
             cout << "=== TETRIS ===";
             SetConsoleTextAttribute(hConsole, 7);
@@ -359,6 +394,7 @@ public:
             initBoard();
             isRunning = true;
             b = rand() % 7; // Lấy random khối gạch
+			
 
             while (isRunning) {
             // VÒNG LẶP KIỂM TRA PHÍM (Tối ưu phản hồi)
@@ -405,10 +441,16 @@ public:
                         linesCleared += removed;
                         score += calculateScore(removed);
                         if (removed > 0) speed = max(50, speed - removed * 10);
-                        x = 4; y = 0; b = rand() % 7;
-                        // Kiểm tra tinh trang thang thua
-                        if (!canMove(0, 0)) {
-                            showGameOver();
+                        x = 4;
+                        y = 0;
+                        b = rand() % 7;
+
+                        // Kiểm tra xem khối mới có thể đặt vào vị trí ban đầu không
+                        if (canMove(0, 0)) {
+                            block2Board();   // Chỉ vẽ khối mới nếu còn chỗ
+                        }
+                        else {
+                            showGameOver();  // Nếu không đặt được thì mới Game Over
                             isRunning = false;
                         }
                     }
