@@ -1,16 +1,51 @@
 #include <iostream>
 #include <conio.h>
+#include <vector>
 #include <windows.h>
 #include <ctime>
 #include <fstream>
 #include <string>
 #include <cstdlib> //color
 #include <windows.h>
+#include <mmsystem.h>
+#pragma comment(lib, "winmm.lib")
 using namespace std;
 #define H 20
 #define W 15
 #define OFFSET_X 30
 #define OFFSET_RIGHT_X 65 // Độ dời của bảng chơi sang bên phải để nhường chỗ cho panel bên trái
+
+int musicIndex = 0; // placeholder cho index nhạc nền, có thể điều chỉnh trong setting
+
+
+// Hàm điều chỉnh âm lượng nhạc nền
+//void playMusic(const wchar_t* filename) {
+//    PlaySound(filename, NULL, SND_FILENAME | SND_ASYNC | SND_LOOP);
+//}
+// Hàm phát nhạc theo chỉ số musicIndex
+void playMusic(int index) {
+    if (index == -1) {
+        PlaySound(NULL, NULL, SND_ASYNC);
+        return;
+    }
+    ifstream musicFile("L:\\CPP VS\\TetrisGame\\CodeForTetris\\CodeForTetris\\Music.txt");
+    vector<string> musicList;
+    string line;
+    while (getline(musicFile, line)) {
+        if (!line.empty()) {
+            musicList.push_back(line);
+        }
+    }
+    musicFile.close();
+
+    if (!musicList.empty()) {
+        
+        wstring wMusicPath(musicList[index].begin(), musicList[index].end());
+        PlaySound(wMusicPath.c_str(), NULL, SND_FILENAME | SND_ASYNC | SND_LOOP);
+    }
+    
+}
+
 
 //Hàm ẩn con trỏ chuột trong console
 void hideCursor() {
@@ -41,7 +76,7 @@ private:
 	int nextBlock = rand() % 7; // khối tiếp theo (hiển thị ở panel bên phải)
 
     int x, y, b;
-    int speed;
+    int speed = 200, tempSpeed = 200;
     int linesCleared;
     bool isPaused;
     bool isRunning;
@@ -101,7 +136,7 @@ public:
 
     void initGameVariables() {
         x = 4; y = 0; b = 1;
-        speed = 200;
+        tempSpeed = speed;
         score = 0;
         linesCleared = 0;
         startTime = time(0);
@@ -376,7 +411,7 @@ public:
         int selectedItem = 0; // 0: Playgame, 1: Exit, 2: Help, 3: Settings
         HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
 
-        string options[4] = { "PLAYGAME", "TUTORIAL", "SETTING", "EXIT"};
+        string options[4] = { "PLAYGAME", "TUTORIAL", "SETTINGS", "EXIT"};
 
         while (true) {
             system("cls"); // Xóa màn hình
@@ -494,6 +529,163 @@ public:
 
         while (_getch() != '\r');
     }
+    /* CÁC HÀM TRONG SETTING*/
+	// Hiển thị menu setting với giao diện tương tự menu chính, trả về lựa chọn của người chơi để xử lý trong hàm run()
+
+    int showSettings() {
+        int selectedItem = 0; // 0: AdjustDefaultSpeed, 1: ExitChangeBackgroundMusic, 2: ChangeVolume, 3: Back
+        HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+
+        string options[3] = { "Adjust Default Speed", "Change Background Music", "Back to Menu" };
+    
+        int data[2];
+		data[0] = speed;
+		data[1] = musicIndex; // placeholder cho background music
+        tempSpeed = speed;
+        while (true) {
+            system("cls"); // Xóa màn hình
+            SetConsoleTextAttribute(hConsole, 7); // Màu trắng mặc định
+
+            // Vẽ viền ngoài cùng tỉ lệ và kích thước với bảng main game (20 dòng x 30 cột)
+            for (int i = 0; i < H + 2; i++) {
+                gotoxy(OFFSET_X, i);
+                for (int j = 0; j < W+5; j++) {
+                    // Nếu là biên trên, biên dưới, biên trái, biên phải thì in "##"
+
+                    if (i == 0 || i == H + 1 || j == 0 || j == W + 4) {
+                        //system("color 1F");
+
+
+                        // Đổi màu nền xanh lá, chữ đỏ
+                        SetConsoleTextAttribute(hConsole, BACKGROUND_RED | FOREGROUND_RED | FOREGROUND_INTENSITY);
+                        cout << "  ";
+                        SetConsoleTextAttribute(hConsole, FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE);
+                    }
+                    else {
+
+                        cout << "  "; // Không gian rỗng bên trong
+
+                    }
+                }
+            }
+
+            // In tiêu đề ở giữa khung
+            gotoxy(OFFSET_X + 12, 3);
+
+
+            SetConsoleTextAttribute(hConsole, 11); // Đổi màu xanh lơ cho title
+            cout << "=== SETTINGS ===";
+            SetConsoleTextAttribute(hConsole, 7);
+
+            // In các tùy chọn căn giữa
+            for (int i = 0; i < 3; i++) {
+                // Thuật toán căn giữa text: (Chiều rộng tổng là 30. Tâm là 15)
+                int len = options[i].length();
+                int x_pos = OFFSET_X + 20 - (len / 2) - 3; // Trừ hao 3 kí tự ">> "
+
+                gotoxy(x_pos, 7 + i * 2); // Mỗi nút cách nhau 2 dòng
+
+                if (selectedItem == i) {
+                    SetConsoleTextAttribute(hConsole, 14); // Màu Vàng cho nút đang chọn
+                    cout << ">> " << options[i] << " <<";
+                    SetConsoleTextAttribute(hConsole, 7);
+                }
+                else {
+                    cout << "   " << options[i] << "   ";
+                }
+            }
+            gotoxy(OFFSET_X + 10, 15);
+            SetConsoleTextAttribute(hConsole, 11); // Đổi màu xanh lơ cho title
+            cout << "=====================";
+            SetConsoleTextAttribute(hConsole, 7);
+            gotoxy(OFFSET_X + 6, 17); cout << "Use [A] / [D] to adjust (-/+)";
+            gotoxy(OFFSET_X + 8, 18); cout << "Press [Enter] to confirm";
+            char c = _getch(); // Nhận phím từ người dùng
+
+            if (c == 'w' || c == 'W') {
+                selectedItem--;
+                if (selectedItem < 0) selectedItem = 3;
+            }
+            else if (c == 's' || c == 'S') {
+                selectedItem++;
+                if (selectedItem > 2) selectedItem = 0;
+            }
+            else if (c == '\r') { // Phím Enter
+                while(1)
+                {
+                    
+                    // Thuật toán căn giữa text: (Chiều rộng tổng là 30. Tâm là 15)
+                    int len = options[selectedItem].length();
+                    int x_pos = OFFSET_X + 20 - (len / 2) - 3; // Trừ hao 3 kí tự ">> "
+
+                    gotoxy(x_pos, 7 + selectedItem * 2); // Mỗi nút cách nhau 2 dòng
+
+                    if (selectedItem == 0) {
+						cout << "                             "; // Xóa dòng hiện tại để in lại
+                        gotoxy(x_pos-1, 7 + selectedItem * 2);
+                        SetConsoleTextAttribute(hConsole, FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_INTENSITY);
+                        cout <<" >> Current Speed: ";
+                        
+                        cout << 400 - tempSpeed << "ms <<";
+                        SetConsoleTextAttribute(hConsole, 7);
+                    }
+                    else if (selectedItem == 1) {
+                        gotoxy(x_pos - 3, 7 + selectedItem * 2);
+                        cout << "                                  "; // Xóa dòng hiện tại để in lại
+                        gotoxy(x_pos - 3, 7 + selectedItem * 2);
+                        SetConsoleTextAttribute(hConsole, FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_INTENSITY);
+                        cout << " >> Current Music: ";
+						if (musicIndex == 0) cout << "Tetris <<";
+                        else if(musicIndex == 1) cout << "Powerup <<";
+                        else if(musicIndex == 2) cout << "Chill Vibes <<";
+                        else if(musicIndex == -1) cout << "None <<";
+                       
+                        SetConsoleTextAttribute(hConsole, 7);
+                    }
+                    
+                    else if (selectedItem == 2) return 0; // Quay lại menu chính
+
+
+                    
+					char c = _getch(); // Nhận phím từ người dùng
+                    if (c == 'a' || c == 'A') {
+                        if (selectedItem == 0) {
+                            tempSpeed += 10;
+                            if (tempSpeed > 300) tempSpeed = 300; // Giới hạn tốc độ chậm nhất
+                        }
+                        else if (selectedItem == 1) {
+                            musicIndex--;
+                            if (musicIndex < -1) musicIndex = 2; // Quay vòng lại nếu giảm dưới -1
+                        }
+                        
+                    }
+                    else if (c == 'd' || c == 'D') {
+                        if (selectedItem == 0) {
+                            tempSpeed -= 10;
+                            if (tempSpeed < 50) tempSpeed = 50; // Giới hạn tốc độ nhanh nhất
+                        }
+                        else if (selectedItem == 1) {
+                            musicIndex++; // Giả sử có 3 bản nhạc nền
+                            if (musicIndex > 2) musicIndex = -1; // Quay vòng lại nếu tăng vượt quá 2
+                        }
+                        
+                    }
+                    else if (c == '\r') {
+                        if (selectedItem == 0) {
+                            speed = tempSpeed; // Cập nhật tốc độ mặc định
+                        }
+						playMusic(musicIndex);
+                        // Xử lý lưu lựa chọn nhạc nền và âm lượng nếu cần
+                        break; // Quay lại menu setting sau khi điều chỉnh
+                    }
+                }
+            }
+        }
+        return 0;
+    }
+	// Hàm xử lý logic cho từng lựa chọn trong menu setting, được gọi trong hàm run() khi người chơi chọn Setting
+
+
 
     void run() {
 
@@ -547,8 +739,7 @@ public:
             }
             else if (choice == 2) { // 2: SETTING
                 system("cls");
-                cout << "me may beo\n";
-                cout << "\n>> Nhan Enter de quay lai menu <<";
+                showSettings();
                 while (_getch() != '\r');
                 continue;
             }
@@ -639,10 +830,12 @@ public:
 };
 
 int main() {
-    hideCursor(); // ẩn con trỏ ngay khi chạy
+    playMusic(musicIndex);
+    hideCursor();
     Tetris game;
     game.run();
     showCursor(); // hiện lại con trỏ khi thoát game
+    PlaySound(NULL, 0, 0);
     return 0;
 }
 

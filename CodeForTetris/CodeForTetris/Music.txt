@@ -1,0 +1,3 @@
+L:\\CPP VS\\TetrisGame\\CodeForTetris\\CodeForTetris\\BackgroundSong1.wav
+L:\\CPP VS\\TetrisGame\\CodeForTetris\\CodeForTetris\\BackgroundSong2.wav
+L:\\CPP VS\\TetrisGame\\CodeForTetris\\CodeForTetris\\BackgroundSong3.wav
