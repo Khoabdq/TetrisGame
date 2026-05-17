@@ -12,6 +12,25 @@ using namespace std;
 #define OFFSET_X 30
 #define OFFSET_RIGHT_X 65 // Độ dời của bảng chơi sang bên phải để nhường chỗ cho panel bên trái
 
+//Hàm ẩn con trỏ chuột trong console
+void hideCursor() {
+    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+    CONSOLE_CURSOR_INFO cursorInfo;
+    GetConsoleCursorInfo(hConsole, &cursorInfo);
+    cursorInfo.bVisible = FALSE; // ẩn con trỏ
+    SetConsoleCursorInfo(hConsole, &cursorInfo);
+}
+// Hàm hiện con trỏ chuột trong console
+void showCursor() {
+    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+    CONSOLE_CURSOR_INFO cursorInfo;
+    GetConsoleCursorInfo(hConsole, &cursorInfo);
+    cursorInfo.bVisible = TRUE; // hiện lại con trỏ
+    SetConsoleCursorInfo(hConsole, &cursorInfo);
+}
+
+
+
 class Tetris {
 private:
     char board[H][W] = {};
@@ -19,6 +38,7 @@ private:
     int blockColors[7] = { 0, 4, 3, 2, 1, 0, 4 };
     int colorCode;
     int boardColor[H][W]; // lưu màu cho từng ô
+	int nextBlock = rand() % 7; // khối tiếp theo (hiển thị ở panel bên phải)
 
     int x, y, b;
     int speed;
@@ -119,74 +139,151 @@ public:
 
     /*VE BAN BEN TRAI MAN HINH GAMEPLAY*/
 
+    // Vẽ khối tiếp theo ở góc trên bên phải
+    void drawNextBlock(int nextBlock) {
+        HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+        int rx = OFFSET_RIGHT_X - 5; // vị trí X góc phải
+        int ry = 3;              // vị trí Y góc trên
+
+        gotoxy(rx, ry);
+        SetConsoleTextAttribute(hConsole, FOREGROUND_RED | FOREGROUND_GREEN);
+  
+        gotoxy(rx, ry++);cout << "   NEXT   |";
+        gotoxy(rx, ry++);cout << "   BLOCK  |";
+        
+        SetConsoleTextAttribute(hConsole, FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_INTENSITY);
+
+		ry = 1; 
+        rx += 15; // Dời sang phải để vẽ block bên trong khung
+        for (int i = 0; i < 4; i++) {
+            gotoxy(rx, ry + 1 + i);
+            for (int j = 0; j < 4; j++) {
+                if (blocks[nextBlock][i][j] != ' ') {
+                    SetColorBlock(blockColors[nextBlock]);
+                    cout << "  ";
+                    SetConsoleTextAttribute(hConsole, FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE);
+                }
+                else {
+                    cout << "  ";
+                }
+            }
+        }
+    }
+
    // Hàm vẽ bảng hướng dẫn bên tay trái
     void drawLeftPanel() {
-        gotoxy(2, 2);  cout << "==========================";
-        gotoxy(2, 3);  cout << "      TETRIS CONTROL      ";
-        gotoxy(2, 4);  cout << "==========================";
+		int ry = 3; // Tọa độ Y bắt đầu của panel bên trái
+        HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
 
-        gotoxy(2, 6);  cout << " [W] : Rotate (Xoay)";
-        gotoxy(2, 7);  cout << " [A] : Left   (Trai)";
-        gotoxy(2, 8);  cout << " [D] : Right  (Phai)";
-        gotoxy(2, 9);  cout << " [S] : Down   (Xuong)";
+        SetConsoleTextAttribute(hConsole, FOREGROUND_RED | FOREGROUND_GREEN);
+        gotoxy(3, ry++);  cout << "==========================";
+        gotoxy(3, ry++);  cout << "      TETRIS CONTROL      ";
+		gotoxy(3, ry++);  cout << "=========================="; ry++;   
+        SetConsoleTextAttribute(hConsole, FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_INTENSITY);
 
-        gotoxy(2, 11); cout << "--------------------------";
-        gotoxy(2, 12); cout << " [P] : PAUSE  (Tam dung)";
-        gotoxy(2, 13); cout << " [R] : RESET  (Choi lai)";
-        gotoxy(2, 14); cout << " [Q] : QUIT   (Thoat)";
-        gotoxy(2, 15); cout << "--------------------------";
+        gotoxy(3, ry++);  cout << " [W] : Rotate (Xoay)";
+        gotoxy(3, ry++);  cout << " [A] : Left   (Trai)";
+        gotoxy(3, ry++);  cout << " [D] : Right  (Phai)";
+		gotoxy(3, ry++);  cout << " [S] : Down   (Xuong)"; ry++;
+
+
+        SetConsoleTextAttribute(hConsole, FOREGROUND_RED | FOREGROUND_GREEN);
+        gotoxy(3, ry++); cout << "--------------------------";
+        gotoxy(3, ry++); cout << " [P] : PAUSE  (Tam dung)";
+        gotoxy(3, ry++); cout << " [R] : RESET  (Choi lai)";
+        gotoxy(3, ry++); cout << " [Q] : QUIT   (Thoat)";
+        gotoxy(3, ry++); cout << "--------------------------";
+		SetConsoleTextAttribute(hConsole, FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_INTENSITY);
     }
 
     void drawRightPanel() {
         int elapsedSeconds = (int)difftime(time(0), startTime);
         int m = elapsedSeconds / 60;
         int s = elapsedSeconds % 60;
+        HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
 
-        int rx = OFFSET_RIGHT_X; // Sử dụng biến ngắn gọn cho tọa độ X bên phải
+        int rx = OFFSET_RIGHT_X - 4; // Sử dụng biến ngắn gọn cho tọa độ X bên phải
+		int ry = 8; // Tọa độ Y bắt đầu của panel bên phải
 
-        gotoxy(rx, 2);  cout << "==========================";
-        gotoxy(rx, 3);  cout << "       GAME STATUS        ";
-        gotoxy(rx, 4);  cout << "==========================";
+        SetConsoleTextAttribute(hConsole, FOREGROUND_RED | FOREGROUND_GREEN);
+        gotoxy(rx, ry++);  cout << "==========================";
+        gotoxy(rx, ry++);  cout << "       GAME STATUS        ";
+		gotoxy(rx, ry++);  cout << "==========================";
+        SetConsoleTextAttribute(hConsole, FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_INTENSITY);
 
-        gotoxy(rx, 6);  cout << " Score : " << score << "          ";
-        gotoxy(rx, 7);  cout << " Best  : " << maxScore << "          ";
-        gotoxy(rx, 8);  cout << " Lines : " << linesCleared << "          ";
-        gotoxy(rx, 9);  cout << " Time  : " << m << "m " << s << "s     ";
-        gotoxy(rx, 10); cout << " Speed : " << speed << "ms     ";
 
-        gotoxy(rx, 12); cout << "--------------------------";
+        gotoxy(rx, ry++);  cout << " Score : " << score << "          ";
+        gotoxy(rx, ry++);  cout << " Best  : " << maxScore << "          ";
+        gotoxy(rx, ry++);  cout << " Lines : " << linesCleared << "          ";
+        gotoxy(rx, ry++);  cout << " Time  : " << m << "m " << s << "s     ";
+		gotoxy(rx, ry++); cout << " Speed : " << 400 - speed << "ms     "; 
+
+
+        SetConsoleTextAttribute(hConsole, FOREGROUND_RED | FOREGROUND_GREEN);
+        gotoxy(rx, ry++); cout << "--------------------------";
+        SetConsoleTextAttribute(hConsole, FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_INTENSITY);
+
         if (isPaused) {
-            gotoxy(rx, 13); cout << " STATUS: >> PAUSED <<  ";
+            gotoxy(rx, ry++); cout << " STATUS: >> PAUSED <<  ";
         }
         else {
-            gotoxy(rx, 13); cout << " STATUS: Playing...    ";
+            gotoxy(rx, ry++); cout << " STATUS: Playing...    ";
         }
-        gotoxy(rx, 14); cout << "--------------------------";
+
+        SetConsoleTextAttribute(hConsole, FOREGROUND_RED | FOREGROUND_GREEN );
+        gotoxy(rx, ry++); cout << "--------------------------";
+        SetConsoleTextAttribute(hConsole, FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_INTENSITY);
     }
 
     void resetGame() {
         initGameVariables();
         initBoard();
         system("cls");
-        b = rand() % 7;
+		b = nextBlock; // Sử dụng khối đã chọn làm khối đầu tiên
+		nextBlock = rand() % 7; // Lấy random khối gạch tiếp theo
         isPaused = false;
     }
     void SetColorBlock(int colorCode) {
         HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
         switch (colorCode) {
-            case 0: SetConsoleTextAttribute(hConsole, BACKGROUND_BLUE); break; // Xanh dương
-            case 1: SetConsoleTextAttribute(hConsole, BACKGROUND_GREEN); break; // Xanh lá
-            case 2: SetConsoleTextAttribute(hConsole, BACKGROUND_GREEN | BACKGROUND_BLUE); break; // Xanh lơ
-            case 3: SetConsoleTextAttribute(hConsole, BACKGROUND_RED | BACKGROUND_BLUE); break; // Hồng
-            case 4: SetConsoleTextAttribute(hConsole, BACKGROUND_RED | BACKGROUND_GREEN); break; // Vàng
-
+            case 0: SetConsoleTextAttribute(hConsole, BACKGROUND_BLUE | BACKGROUND_INTENSITY); break; // Xanh dương
+            case 1: SetConsoleTextAttribute(hConsole, BACKGROUND_GREEN | BACKGROUND_INTENSITY); break; // Xanh lá
+            case 2: SetConsoleTextAttribute(hConsole, BACKGROUND_GREEN | BACKGROUND_BLUE | BACKGROUND_INTENSITY); break; // Xanh lơ
+            case 3: SetConsoleTextAttribute(hConsole, BACKGROUND_RED | BACKGROUND_BLUE | BACKGROUND_INTENSITY); break; // Hồng
+            case 4: SetConsoleTextAttribute(hConsole, BACKGROUND_RED | BACKGROUND_GREEN | BACKGROUND_INTENSITY); break; // Vàng
         }
 	}
 
     void draw() {
         drawLeftPanel();
         drawRightPanel();
+        drawNextBlock(nextBlock);
 
+        // Vẽ khung bao quanh toàn bộ màn hình
+        int frameWidth = OFFSET_RIGHT_X + W + 9;
+        int frameHeight = H;
+        HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+
+        for (int i = 0; i < frameHeight; i++) {
+            for (int j = 0; j < frameWidth; j++) {
+                gotoxy(j, i);
+                if (i == 0 || i == frameHeight - 1 || j == 0 || j == frameWidth - 1) {
+                    
+                    SetConsoleTextAttribute(hConsole, BACKGROUND_RED);
+                    cout << "  ";
+                    SetConsoleTextAttribute(hConsole, FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE);
+                }
+                if(i == 7 && (j >= OFFSET_RIGHT_X - 5 && j < OFFSET_RIGHT_X + W + 7)) {
+                    SetConsoleTextAttribute(hConsole, BACKGROUND_RED);
+                    cout << "  ";
+                    SetConsoleTextAttribute(hConsole, FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE);
+                }   
+            }
+        }
+
+
+
+        
         for (int i = 0; i < H; i++) {
             gotoxy(OFFSET_X, i);
             for (int j = 0; j < W; j++) {
@@ -353,11 +450,30 @@ public:
         saveMaxScore();
         system("cls");
 
-        int cx = 20;
+        int cx = 16;
 
+        // Vẽ khung đỏ bao quanh màn hình Game Over
+        int frameWidth = 39; // chiều rộng khung 
+        int frameHeight = 18; // chiều cao khung 
+
+        HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+
+        for (int i = 0; i < frameHeight; i++) {
+            for (int j = 0; j < frameWidth; j++) {
+                gotoxy(cx + j, i); // dịch sang phải theo cx
+                if (i == 0 || i == frameHeight - 1 || j == 0 || j == frameWidth - 1) {
+                    SetConsoleTextAttribute(hConsole, BACKGROUND_RED);
+                    cout << "  ";
+                    SetConsoleTextAttribute(hConsole, FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE);
+                }
+            }
+        }
+        cx = 20;
+        SetConsoleTextAttribute(hConsole, FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_INTENSITY);
         gotoxy(cx, 3);  cout << "================================";
         gotoxy(cx, 4);  cout << "          GAME  OVER           ";
         gotoxy(cx, 5);  cout << "================================";
+        SetConsoleTextAttribute(hConsole, FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_INTENSITY);
 
         gotoxy(cx, 7);  cout << "   Score      :  " << score;
         gotoxy(cx, 8);  cout << "   Lines      :  " << linesCleared;
@@ -367,9 +483,13 @@ public:
         int s = elapsedSeconds % 60;
         gotoxy(cx, 10); cout << "   Time       :  " << m << "m " << s << "s";
 
+
+        SetConsoleTextAttribute(hConsole, FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_INTENSITY);
         gotoxy(cx, 12); cout << "--------------------------------";
         gotoxy(cx, 13); cout << "   >> Back to Menu  [Enter] << ";
         gotoxy(cx, 14); cout << "--------------------------------";
+        SetConsoleTextAttribute(hConsole, FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE);
+
 
         while (_getch() != '\r');
     }
@@ -384,7 +504,30 @@ public:
 
             if (choice == 3) { // 3: EXIT
                 system("cls");
-                cout << "Hen gap lai!\n";
+                int cx = 16;
+
+                // Khung bao quanh thông báo Exit
+                int frameWidth = 30; // rộng hơn để ôm chữ
+                int frameHeight = 7;  // cao hơn để ôm nội dung
+
+                HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+
+                for (int i = 0; i < frameHeight; i++) {
+                    for (int j = 0; j < frameWidth; j++) {
+                        gotoxy(cx + j, i);
+                        if (i == 0 || i == frameHeight - 1 || j == 0 || j == frameWidth - 1) {
+                            SetConsoleTextAttribute(hConsole, BACKGROUND_RED);
+                            cout << "  ";   // chỉ in 1 khoảng trắng để khung đều
+                            SetConsoleTextAttribute(hConsole, FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE);
+                        }
+                    }
+                }
+
+                // In thông báo bên trong khung
+                gotoxy(cx + 10, 3);
+                SetConsoleTextAttribute(hConsole, FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_INTENSITY);
+                cout << "Hen gap lai!";
+                _getch();
                 return;
             }
             else if (choice == 1) { // 1: TUTORIAL
@@ -408,7 +551,8 @@ public:
             initGameVariables();
             initBoard();
             isRunning = true;
-            b = rand() % 7; // Lấy random khối gạch
+			b = nextBlock; // Sử dụng khối đã chọn làm khối đầu tiên
+            nextBlock = rand() % 7; // Lấy random khối gạch tiếp theo
 			
 
             while (isRunning) {
@@ -417,8 +561,8 @@ public:
                     if (_kbhit()) {
                         char c = _getch();
                         if (c == 'q' || c == 'Q') {
+                            showGameOver();  // Nếu không đặt được thì mới Game Over
                             isRunning = false;
-                            quitApp = true;
                             break;
                         }
                         if (c == 'r' || c == 'R') {
@@ -458,7 +602,8 @@ public:
                         if (removed > 0) speed = max(50, speed - removed * 10);
                         x = 4;
                         y = 0;
-                        b = rand() % 7;
+                        b = nextBlock;          // dùng khối đã preview
+                        nextBlock = rand() % 7; // cập nhật khối tiếp theo
 
                         // Kiểm tra xem khối mới có thể đặt vào vị trí ban đầu không
                         if (canMove(0, 0)) {
@@ -486,8 +631,10 @@ public:
 };
 
 int main() {
+    hideCursor(); // ẩn con trỏ ngay khi chạy
     Tetris game;
     game.run();
+    showCursor(); // hiện lại con trỏ khi thoát game
     return 0;
 }
 
