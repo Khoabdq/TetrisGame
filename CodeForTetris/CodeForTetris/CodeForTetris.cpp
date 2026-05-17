@@ -18,6 +18,8 @@ private:
     char blocks[7][4][4];
     int blockColors[7] = { 0, 4, 3, 2, 1, 0, 4 };
     int colorCode;
+    int boardColor[H][W]; // lưu màu cho từng ô
+
     int x, y, b;
     int speed;
     int linesCleared;
@@ -87,17 +89,27 @@ public:
     }
 
     void boardDelBlock() {
-        for (int i = 0; i < 4; i++)
-            for (int j = 0; j < 4; j++)
-                if (blocks[b][i][j] != ' ' && y + i < H)
+        for (int i = 0; i < 4; i++) {
+            for (int j = 0; j < 4; j++) {
+                if (blocks[b][i][j] != ' ' && y + i < H) {
                     board[y + i][x + j] = ' ';
+                    boardColor[y + i][x + j] = -1; // reset màu ô về rỗng
+                }
+            }
+        }
     }
+
     void block2Board() {
-        for (int i = 0; i < 4; i++)
-            for (int j = 0; j < 4; j++)
-                if (blocks[b][i][j] != ' ')
+        for (int i = 0; i < 4; i++) {
+            for (int j = 0; j < 4; j++) {
+                if (blocks[b][i][j] != ' ') {
                     board[y + i][x + j] = blocks[b][i][j];
+                    boardColor[y + i][x + j] = blockColors[b]; // gán màu cố định cho ô
+                }
+            }
+        }
     }
+
     void initBoard() {
         for (int i = 0; i < H; i++)
             for (int j = 0; j < W; j++)
@@ -175,26 +187,29 @@ public:
         drawLeftPanel();
         drawRightPanel();
 
-        // Vẽ Board game
         for (int i = 0; i < H; i++) {
             gotoxy(OFFSET_X, i);
             for (int j = 0; j < W; j++) {
                 HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
-                if (board[i][j] == '#'|| i == 0) {
+                if (board[i][j] == '#' || i == 0) {
                     SetConsoleTextAttribute(hConsole, BACKGROUND_RED);
-					cout << "  ";
-					SetConsoleTextAttribute(hConsole, FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE);
+                    cout << "  ";
+                    SetConsoleTextAttribute(hConsole, FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE);
                 }
-                else if (board[i][j] == ' ') cout << "  ";
+                else if (board[i][j] == ' ') {
+                    cout << "  ";
+                }
                 else {
-                    int colorCode = blockColors[b];
+                    // lấy màu từ boardColor thay vì blockColors[b]
+                    int colorCode = boardColor[i][j];
                     SetColorBlock(colorCode);
                     cout << "  ";
-					SetConsoleTextAttribute(hConsole, FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE); 
+                    SetConsoleTextAttribute(hConsole, FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE);
                 }
             }
         }
     }
+
     bool canMove(int dx, int dy) {
         for (int i = 0; i < 4; i++)
             for (int j = 0; j < 4; j++)
